@@ -23,7 +23,7 @@ conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.1 -c pytorch
 conda install tensorboard==1.15.1
 ```
 
-## 2. Genrate synthetic dataset
+## 2. Generate synthetic dataset
 
 Download the project [SMPLPYTORCH](https://github.com/gulvarol/smplpytorch) with SMPL models downloaded and configurated and put the subfolder "smplpytorch" into the folder "external".
 
@@ -101,6 +101,7 @@ Once prepared mocap dataset, we can train and evaluate the model [Holden 2018] b
 python train_and_evaluate_Holden2018.py
 ```
 
+## 3.3 Pre-trained models
 
 We set the SEED number to 100, 200, 300, 400 respectively, and generated four different datasets. We trained MoCap-Solver and [Holden 2018] on these four datasets and evaluated the errors on the test dataset, the evaluation result is showed on the table.
 
