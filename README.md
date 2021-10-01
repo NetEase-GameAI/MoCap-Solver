@@ -108,61 +108,19 @@ We gave the pretained corresponding MoCap-Encoders in "models".
 
 In our original implementation of MoCap-Solver and [Holden 2018] in our paper, markers and skeletons were normalized using the average bone length of the dataset. However, it is problematic when deploying this algorithm to the production environment, since the groundtruth skeletons of test data were actually unknown information. So in our released version, such normalization is removed and the evaluation error is slightly higher than our original implementation since the task has become more complex.
 
-<table>
-    <tr>
-        <td rowspan="2"> </td>
-        <td colspan="2">SEED100  </td>
-        <td colspan="2">SEED200</td>
-        <td colspan="2">SEED300</td>
-        <td colspan="2">SEED400</td>
-    </tr>
-    <tr>
-        
-        <td> [Holden 2018] </td>
-        <td> Ours </td>
-        <td> [Holden 2018] </td>
-        <td> Ours </td>
-        <td> [Holden 2018] </td>
-        <td> Ours </td>
-        <td> [Holden 2018] </td>
-        <td> Ours </td>
-    </tr>
-        <tr>
-        <td> Mean skeleton position error(mm)</td>
-        <td> 18.7 </td>
-        <td> 10.08  </td>
-        <td> 17.9</td>
-        <td> 10.11  </td>
-        <td> 18.1 </td>
-        <td> 10.28 </td>
-        <td> 18.2 </td>
-        <td> 9.69 </td>
-    </tr>
-    </tr>
-        <tr>
-        <td> Mean skeleton rotation error(deg)</td>
-        <td> 7.72  </td>
-        <td> 3.42 </td>
-        <td> 7.29</td>
-        <td> 3.44  </td>
-        <td> 7.66 </td>
-        <td> 3.47 </td>
-        <td> 7.71 </td>
-        <td> 3.32 </td>
-    </tr>
-    </tr>
-        <tr>
-        <td> Mean marker error(deg)</td>
-        <td> 19.86  </td>
-        <td> 10.51  </td>
-        <td> 18.83</td>
-        <td> 10.57  </td>
-        <td> 19.29 </td>
-        <td> 10.86 </td>
-        <td> 19.29 </td>
-        <td> 10.22 </td>
-    </tr>
-</table>
+| [Holden 2018]      | SEED100     | SEED200     | SEED300     | SEED400     | 
+|----------------|---------------:|
+| Mean skeleton position error(mm) | 18.7 | 17.9 | 18.1 | 18.2|
+| Mean skeleton rotation error(deg)| 7.72| 7.29 | 7.66 | 7.71|
+| Mean skeleton rotation error(deg)| 19.86| 18.83 | 19.29 | 19.29|
+
+
+| Ours      | SEED100     | SEED200     | SEED300     | SEED400     | 
+|----------------|---------------:|
+| Mean skeleton position error(mm) | 10.08 | 10.11 | 10.28 | 9.69|
+| Mean skeleton rotation error(deg)| 3.42| 3.44 | 3.47 | 3.32|
+| Mean skeleton rotation error(deg)| 10.51| 10.57 | 10.86 | 10.22|
+
 
 
 ## 4. Typos
