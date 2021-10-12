@@ -19,6 +19,10 @@ conda install json5=0.9.1
 conda install pyquaternion=0.9.9
 conda install h5py=2.10.0
 conda install tqdm=4.56.0
+conda install tensorflow-gpu==1.13.1
+conda install keras==2.2.5
+conda install chumpy==0.70
+conda install opencv-python==4.5.3.56
 conda install pytorch==1.6.0 torchvision==0.7.0 cudatoolkit=10.1 -c pytorch
 conda install tensorboard==1.15.1
 ```
