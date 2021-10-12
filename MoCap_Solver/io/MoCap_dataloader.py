@@ -149,7 +149,7 @@ class TrainData(Dataset):
         currentframe = 0
         for npzfile in self.npzfiles:
             filename = os.path.basename(npzfile).split('.')[0]
-            M1 = np.load(os.path.join('data', 'training_noise_windows_data', filename+'.npy'))
+            M1 = np.load(os.path.join('MoCap_Solver', 'data', 'training_noise_windows_data', filename+'.npy'))
             N = M1.shape[0]
             self.raw_markers[currentframe: (currentframe + N)] = M1
             currentframe += N

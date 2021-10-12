@@ -124,7 +124,7 @@ def generate_test_data(SEED):
         model_root=os.path.join('external', 'smplpytorch', 'native', 'models'))
 
 
-    for npz_frame_idx in tqdm(test_motion_set[:20]):
+    for npz_frame_idx in tqdm(test_motion_set[:]):
         try:
             folder_name = file_folders[npz_frame_idx]
             filename = file_list[npz_frame_idx]

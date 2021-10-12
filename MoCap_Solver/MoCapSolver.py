@@ -23,11 +23,11 @@ class MoCapSolver():
 
     def train_encoders(self):
         ##################### Train Template Skeleton Encoder #####################################
-        # from MoCap_Solver.train.train_template_skeleton import train_template_skeleton
-        # train_template_skeleton()
+        from MoCap_Solver.train.train_template_skeleton import train_template_skeleton
+        train_template_skeleton()
         # ##################### Train Marker Configuration Encoder ##################################
-        # from MoCap_Solver.train.train_marker_configuration import train_marker_configuration
-        # train_marker_configuration()
+        from MoCap_Solver.train.train_marker_configuration import train_marker_configuration
+        train_marker_configuration()
         ##################### Train Motion Encoder ################################################
         from MoCap_Solver.train.train_motion import train_motion
         train_motion()
