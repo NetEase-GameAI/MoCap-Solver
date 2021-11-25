@@ -3,8 +3,7 @@ import os
 import numpy as np
 
 def extract_shape_data():
-    #h = np.load(os.path.join('external', 'smpl_data.npz'))
-    h = np.load('/storage02/users/tanzhipeng/MoCap-Solver-main/external/smpl_data.npz')
+    h = np.load(os.path.join('external', 'smpl_data.npz'))
     maleshapes = h['maleshapes']
     N = maleshapes.shape[0]
     if not os.path.exists(os.path.join('external', 'male_shape_data')):

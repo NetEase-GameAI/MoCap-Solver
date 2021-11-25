@@ -4,6 +4,10 @@ sys.path.append(os.path.join('external'))
 
 SEED = 100
 
+print('############## extract shape data ##################################')
+from SyntheticDataGeneration.extract_shape_data import extract_shape_data
+extract_shape_data()
+
 print('############## generate test synthetic data ##################################')
 from SyntheticDataGeneration.generate_test_data import generate_test_data
 generate_test_data(SEED)
