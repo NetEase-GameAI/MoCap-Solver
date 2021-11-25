@@ -147,8 +147,11 @@ class ForwardKinematics:
                 assert i == 0
                 continue
 
-            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
             result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
+            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :].clone(), transform[..., i, :, :].clone())
+
             if world: result[..., i, :] += result[..., pi, :]
         return result
 
@@ -181,8 +184,10 @@ class ForwardKinematics:
                 assert i == 0
                 continue
 
-            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
             result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
+            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :].clone(), transform[..., i, :, :].clone())
             if world: result[..., i, :] += result[..., pi, :]
         return result, transform
 
@@ -218,8 +223,10 @@ class ForwardKinematics:
                 assert i == 0
                 continue
 
-            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :], transform[..., i, :, :])
+            # result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
             result[..., i, :] = torch.matmul(transform[..., pi, :, :], offset[..., i, :, :]).squeeze()
+            transform[..., i, :, :] = torch.matmul(transform[..., pi, :, :].clone(), transform[..., i, :, :].clone())
             if world: result[..., i, :] += result[..., pi, :]
         return result, transform
 

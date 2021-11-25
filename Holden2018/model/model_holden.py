@@ -1,7 +1,7 @@
 import os
 os.environ['KERAS_BACKEND']= 'tensorflow'
 from keras.models import Model
-from keras.layers import Input, Add,Dropout,PReLU,LeakyReLU,Conv2D,Conv2DTranspose,Concatenate
+from keras.layers import Input, Add,Dropout,PReLU,LeakyReLU,Conv2D,Conv2DTranspose,Concatenate, Lambda,  Multiply
 from keras.layers.normalization import BatchNormalization
 from keras.layers.core import Dense, Activation,Flatten,Reshape
 from keras import regularizers
@@ -14,7 +14,31 @@ import numpy as np
 from utils.utils import _dict_marker, _dict_joints, MARKERNUM, JOINTNUM
 
 
-def get_Denoise_Markers_Model(input_channel_num = 2,marker_nums=MARKERNUM, joints_nums=JOINTNUM, lr = 0.0001):
+def computeMarker(jtransform,mrkconfig, weights, train_joints_data):
+    
+    jtransform = Reshape((JOINTNUM, 3, 4))(jtransform)
+    jtransform = Lambda(lambda x: x * train_joints_data[1] + train_joints_data[0])(jtransform)
+    jtrans = Lambda(lambda x: x[:,:,:,3])(jtransform)
+    jtrans = Reshape((1, JOINTNUM, 3))(jtrans)
+    jtrans = Lambda(lambda x:K.tile(x, (1,MARKERNUM,1,1)))(jtrans)
+    jrot = Lambda(lambda x: x[:,:,:,0:3])(jtransform)
+    jrot = Reshape((1, JOINTNUM, 3, 3))(jrot)
+    jrot = Lambda(lambda x:K.tile(x, (1, MARKERNUM, 1, 1, 1)))(jrot)
+
+    weight = weights.reshape(1, MARKERNUM, JOINTNUM, 1)
+
+    mrkconfig = Reshape((MARKERNUM, JOINTNUM, 1, 3))(mrkconfig)
+    mrkconfig = Lambda(lambda x:K.tile(x, (1, 1, 3, 1)))(mrkconfig)
+    offset = Lambda(lambda x:x * mrkconfig)(jrot)   # , Marker * join * 3*3
+    offset = Lambda(lambda x:K.sum(x, axis = 4))(offset)
+    offset = Add()([offset, jtrans])   #  Marker * join * 3
+    offset = Lambda(lambda x:x * weight)(offset) # Marker * join * 1
+    offset = Lambda(lambda x:K.sum(x, axis = 2), name = 'x_output2')(offset)
+    return offset
+
+
+def get_Denoise_Markers_Model(input_channel_num = 2, marker_nums=MARKERNUM, joints_nums=JOINTNUM, lr = 0.0001, weights = None):
+
     train_joints_data = np.load(os.path.join('models', "train_data_joint_holden.npy"))
     gama_para = 0.001
     gama_choose = True
@@ -82,6 +106,7 @@ def get_Denoise_Markers_Model(input_channel_num = 2,marker_nums=MARKERNUM, joint
         return m
 
     inputs = Input(shape=(marker_nums,3,input_channel_num))
+    input_mrk_config = Input(shape=(marker_nums,joints_nums,3))
     features = Flatten()(inputs)
     if gama_choose == True:   
         x = Dense(2048,kernel_initializer='he_normal',activity_regularizer = regularizers.l2(gama_para))(features)
@@ -90,9 +115,9 @@ def get_Denoise_Markers_Model(input_channel_num = 2,marker_nums=MARKERNUM, joint
     x = _residual_block(x,2048)
 
     x = _residual_block(x,2048)
-	
+
     x = _residual_block(x,2048)
-	
+
     x = _residual_block(x,2048)
 
     x = _residual_block(x,2048)
@@ -104,8 +129,10 @@ def get_Denoise_Markers_Model(input_channel_num = 2,marker_nums=MARKERNUM, joint
     else:
         x_o = Dense(joints_nums*3*4,kernel_initializer='he_normal')(x_o)
     
-    x_o = Reshape((joints_nums, 3, 4), input_shape = (joints_nums * 3 * 4,), name = 'x_output')(x_o)
-
+    x_o0 = Reshape((joints_nums, 3, 4), input_shape = (joints_nums * 3 * 4,), name = 'x_output')(x_o)
+    x_o1 = Reshape((joints_nums, 3, 4), input_shape = (joints_nums * 3 * 4,), name = 'x_output1')(x_o)
+    x_o3 = computeMarker(x_o, input_mrk_config, weights, train_joints_data) 
+    
     HUBER_DELTA = 200
 
     def smoothL1(y_true, y_pred):
@@ -126,12 +153,50 @@ def get_Denoise_Markers_Model(input_channel_num = 2,marker_nums=MARKERNUM, joint
         error_mat = K.sqrt(error_mat)
         error = K.mean(error_mat)
         return error
+    def marker_error_loss(y_true, y_pred):
+        error_mat = K.square(y_true - y_pred)
+        error_mat = K.sum(error_mat, axis = 2)
+        error_mat = K.sqrt(error_mat)
+        error = K.mean(error_mat)
+        return error
 
-    model = Model(inputs=inputs, outputs= x_o)
+    # angle_dis = abs(math.acos((np.trace(np.dot(np.linalg.inv(r_gt),r_est))-1)/2))
+    def joint_angle_error_loss(y_true, y_pred):
+        y_pred = y_pred * train_joints_data[1] + train_joints_data[0]
+        y_pred = y_pred[:, :, :, 0:3]
+        y_true = y_true[:, :, :, 0:3]
+
+        y_pred1 = y_pred[:,  :, 0, :]
+        y_pred2 = y_pred[:,  :, 1, :]
+        y_pred3 = y_pred[:,  :, 2, :]
+        y_pred1 = K.reshape(y_pred1, (-1, JOINTNUM, 1, 3))
+        y_pred2 = K.reshape(y_pred2, (-1, JOINTNUM, 1, 3))
+        y_pred3 = K.reshape(y_pred3, (-1, JOINTNUM, 1, 3))
+        y_pred1 = K.tile(y_pred1, (1, 1, 3, 1))
+        y_pred2 = K.tile(y_pred2, (1, 1, 3, 1))
+        y_pred3 = K.tile(y_pred3, (1, 1, 3, 1))
+        z_pred1 = y_true * y_pred1
+        z_pred2 = y_true * y_pred2
+        z_pred3 = y_true * y_pred3
+        z_pred1 = K.sum(z_pred1, axis = 3)
+        z_pred2 = K.sum(z_pred2, axis = 3)
+        z_pred3 = K.sum(z_pred3, axis = 3)
+        z_pred1 = K.reshape(z_pred1, (-1, JOINTNUM, 3, 1))
+        z_pred2 = K.reshape(z_pred2, (-1, JOINTNUM, 3, 1))
+        z_pred3 = K.reshape(z_pred3, (-1, JOINTNUM, 3, 1))
+        z_pred = K.concatenate([z_pred1, z_pred2, z_pred3])
+        z_pred_trace = tf.linalg.trace(z_pred) 
+        z_pred_trace = (z_pred_trace - 1.)/2.000000000
+        z_pred_trace = K.clip(z_pred_trace, -1.0, 1.0)
+        z_pred_trace = tf.acos(z_pred_trace) 
+        z_pred_trace = K.abs(z_pred_trace * 180 /3.141592653)   #* 10 #
+        error = K.mean(z_pred_trace)
+        return error
+
+    model = Model(inputs=[inputs,input_mrk_config], outputs= [x_o0, x_o1, x_o3])
     opt = Adam(lr=lr) 
 
-    model.compile(optimizer=opt, loss= {'x_output': smoothL1}, loss_weights={'x_output':3}, metrics={'x_output': joint_trans_error_loss})
-
+    model.compile(optimizer=opt, loss= {'x_output': smoothL1, 'x_output1': smoothL1, 'x_output2': marker_error_loss}, loss_weights={'x_output':3, 'x_output1':0,'x_output2':0}, metrics={'x_output': joint_trans_error_loss, 'x_output1': joint_angle_error_loss,  'x_output2': marker_error_loss})
     return model
 if __name__ == "__main__":
     print (get_Denoise_Markers_Model().summary())

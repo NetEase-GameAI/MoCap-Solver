@@ -8,7 +8,7 @@ model_class.extract_encoder_data()
 print('2. Start training MoCap-Encoders!')
 model_class.train_encoders()
 
-# print('3. Evaluate MoCap-Encoders!')
+print('3. Evaluate MoCap-Encoders!')
 model_class.evaluate_encoders()
 
 print('3. Start extracting mocap-solver data')

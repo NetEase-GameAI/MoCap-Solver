@@ -21,21 +21,18 @@ def evaluate_mocap_solver():
         para_file.write(' '.join(sys.argv))
     # train_dataset = TrainData(args1, statistic_on=True)
     test_dataset = ValData(args1)
-    test_data_loader = DataLoader(test_dataset, batch_size=512, shuffle=False, num_workers=0, drop_last=True)
+    test_data_loader = DataLoader(test_dataset, batch_size=512, shuffle=True, num_workers=0, drop_last=True)
     print('data loader over!')
     model = MoCapSolverModel(args1, topology)
     print('model init over!')
     model.load2()
     model.setup()
     print('model set up over!')
-    start_time = time.time()
-    min_loss = 1e10
     model.model.auto_encoder.eval()
     model.model.mc_encoder.eval()
     model.model.static_encoder.eval()
     statistic_data = np.zeros((4))
     with torch.no_grad():
-        model.model.Marker_encoder.eval()
         num = 0
         for step, motions in enumerate(test_data_loader):
             model.set_input(motions)

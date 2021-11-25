@@ -6,6 +6,12 @@ from utils.parse_data import get_transfer_matrix
 from tqdm import tqdm
 from utils.parse_data import get_marker_config1 as get_marker_config
 
+def simulate_outlier_remove(M, M1):
+    remove_threshold = 0.2
+    detM = np.sqrt( np.sum( np.square(M1-M), axis = -1) )
+    M1[detM > remove_threshold] = [0.0,0.0,0.0]
+    return M1
+
 def generate_holden_dataset():
     train_input_folder = os.path.join('data', 'train_sample_data')
     test_input_folder = os.path.join('data', 'test_sample_data')
@@ -28,7 +34,6 @@ def generate_holden_dataset():
     t_pos_marker = np.load(os.path.join('models', 't_pos_marker.npy'))
     for npz_file in tqdm(train_files):
         file_name = os.path.basename(npz_file).split('.')[0]
-
         h = np.load(npz_file)
         M1 = h['M1']
         N = M1.shape[0]
@@ -36,6 +41,7 @@ def generate_holden_dataset():
         J = h['J']
         J_R = h['J_R']
         J_t = h['J_t']
+        M1 = simulate_outlier_remove(M, M1)
         for i in range(N):
             M_i = M[i, ref_idx, :]
             R, T = get_transfer_matrix(M_i, t_pos_marker)
@@ -51,6 +57,7 @@ def generate_holden_dataset():
         weighted_mrk_config = weighted_mrk_config.reshape(1, MARKERNUM, 3)
         weighted_mrk_config = np.tile(weighted_mrk_config, [N, 1, 1])
 
+
         output_file = os.path.join(train_output_folder, file_name + '.npz')
         np.savez(output_file, M1=M1, M=M, mrk_config = mrk_config, weighted_mrk_config=weighted_mrk_config, J_all=J_all)
 
@@ -63,6 +70,7 @@ def generate_holden_dataset():
         J = h['J']
         J_R = h['J_R']
         J_t = h['J_t']
+        M1 = simulate_outlier_remove(M, M1)
         for i in range(N):
             M_i = M[i, ref_idx, :]
             R, T = get_transfer_matrix(M_i, t_pos_marker)

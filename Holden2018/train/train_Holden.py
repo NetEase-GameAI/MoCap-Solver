@@ -9,6 +9,7 @@ from Holden2018.io.TrainDataGenerator import TrainGenerator, ValGenerator
 from Holden2018.io.train import Schedule, CustomModelCheckpoint, LossHistory
 from keras.callbacks import LearningRateScheduler
 from utils.utils import MARKERNUM, JOINTNUM
+import numpy as np
 
 def train_Holden():
     nb_epochs = 400
@@ -25,11 +26,12 @@ def train_Holden():
 
     ############### 1. Load the training data and the testing data. ###########################
     weights_file_path = os.path.join('models', 'weights.npy')
+    weights = np.load(weights_file_path, allow_pickle=True) #56 * 24
     train_generator = TrainGenerator(weights_file_path, statistic_on=True)
     val_generator = ValGenerator(weights_file_path)
     ############### 2. Load the model. #######################################################
     from Holden2018.model.model_holden import get_Denoise_Markers_Model
-    model = get_Denoise_Markers_Model(input_channel_num=2, marker_nums=MARKERNUM, joints_nums=JOINTNUM, lr=lr)
+    model = get_Denoise_Markers_Model(input_channel_num=2, marker_nums=MARKERNUM, joints_nums=JOINTNUM, lr=lr,weights=weights)
     pre_train_model = os.path.join(output_path, 'previous.hdf5')
     if os.path.exists(pre_train_model):
         print('model_load!')
@@ -52,18 +54,21 @@ def train_Holden():
         tbCallBack
     ]
     ################ 4. Start training. ##########################################################
-    data_x_vec, data_y_vec0= train_generator.get_all_vectors()
-    val_x_vec, val_y_vec0 = val_generator.get_all_vectors()
+    ##x_vec input:noise marker + mean mrk config (N,56,3,2), y_vec1:noise marker (N,56,3) y_vec2:clean marker （N,56,3） y_vec3:mrkconfig （N,56,24,3）
+    data_x_vec, data_y_vec0, data_y_vec1, data_y_vec2, data_y_vec3 = train_generator.get_all_vectors()
+    val_x_vec, val_y_vec0, val_y_vec1, val_y_vec2, val_y_vec3 = val_generator.get_all_vectors()
+
 
     print(len(data_x_vec))
     hist = model.fit(
-        data_x_vec,
-        data_y_vec0,
+        [data_x_vec,data_y_vec3],
+        [data_y_vec0, data_y_vec1, data_y_vec2],
         batch_size=batch_size,
         epochs=nb_epochs,
         verbose=1,
         shuffle=True,
         callbacks=callbacks,
         validation_data=(
-            val_x_vec, val_y_vec0)
+        [val_x_vec,val_y_vec3],
+        [val_y_vec0, val_y_vec1, val_y_vec2])
     )

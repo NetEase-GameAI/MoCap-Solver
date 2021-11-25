@@ -95,13 +95,12 @@ def generate_train_data(SEED):
                   6730, 4520, 4861, 5594, 5480, 4555, 4529, 6634, 6682, 4332, 5751, 5609, 4598, 6657, 5322, 4915,
                   5157,
                   1330, 751]
-    marker_idx1 = [414, 1219, 3495, 2837, 3207, 447, 709, 2911, 1910, 104, 1294, 2920, 3331, 1023, 1718, 1995, 2110, 1068, 1043, 3232, 3285, 846, 2173, 2032, 1112, 3213, 1238, 1442, 1686, 6604, 6882, 4195, 5244, 5090, 3517, 4778, 6380, 6730, 4520, 4861, 5594, 5480, 4555, 4529, 6634, 6683, 4332, 5655, 5609, 4598, 6612, 5322, 4915, 5157, 1330, 751]
-    # marker_idx_set = [[], []]
+
     marker_idx_set_idx = [0, 1, 2, 3,4 ,5,6,7,8,9]
     person_idx_set_idx = np.random.permutation(1700)
     train_person_set_idx = person_idx_set_idx[:1530]
     trainfile = os.path.join('external', 'CMU')
-    validfile = os.path.join('external', 'CMU')
+
     out_train_file = os.path.join('data', 'train_sample_data')
     out_valid_file = os.path.join('data', 'test_sample_data')
     shape_file_dir = os.path.join('external', 'male_shape_data')
@@ -176,7 +175,7 @@ def generate_train_data(SEED):
             filename = os.path.basename(npz_frame).split('.')[0]
 
             output_file = os.path.join(out_train_file, folder_name + '_' + filename + '_' + str(mc_select_idx) + '.npz')
-            # output_file = os.path.join(out_train_file, filename  + '.npz')
+
             pose_param1 = np.zeros((1, 72), dtype=np.float32)
             shape_params = shape.astype(np.float32)
             pose_param1 = torch.tensor(pose_param1)
@@ -188,7 +187,7 @@ def generate_train_data(SEED):
             verts, Jtr, JtrR = smpl_layer(pose_param1, th_betas=shape_params)
             Joint = np.array(Jtr.cpu().detach())[0, :, :]
             t_pose_marker = np.array(verts.cpu().detach())[0, marker_idx, :]
-            weights = smpl_layer.th_weights[marker_idx, :].cpu().numpy()
+
             weights1 = smpl_layer.th_weights[marker_idx4, :].cpu().numpy()
             np.save('weights.npy', weights1)
             ############ skinning ###########################################
@@ -197,7 +196,7 @@ def generate_train_data(SEED):
             for i in range(N):
                 M[i] = skinning_from_mrk_config(marker_config, J_t[i], J_R[i], weights1)
                 M1[i, ref_idx] = M[i, ref_idx]
-                M1[i, non_ref_idx] = corrupt(M[i, non_ref_idx], 0.1, 0.1, 0.3)
+                M1[i, non_ref_idx] = corrupt(M[i, non_ref_idx], 0.1, 0.1, 0.3)  #test 0.1, 0.1, 0.1
             np.savez(output_file, person_idx=person_rand_number, mrkconfig_idx=rand_number, M=M, M1=M1, J_t=J_t, J_R=J_R, shape=shape, J=Joint, Marker=t_pose_marker,
                      weights=weights1)
 

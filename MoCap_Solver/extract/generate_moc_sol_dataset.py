@@ -27,6 +27,14 @@ def qfix(q):
     result[1:][mask] *= -1
     return result
 
+
+def simulate_outlier_remove(M, M1):
+    remove_threshold = 0.2
+    detM = np.sqrt( np.sum( np.square(M1-M), axis = 3) )
+    detM_mask = detM > remove_threshold
+    M1[detM_mask] =  [0.0,0.0,0.0]
+    return M1
+
 def mocap_processing(input_folder, output_folder):
     npz_frames = glob.glob(os.path.join(input_folder, '*.npz'))
     device = torch.device('cuda:0')
@@ -72,13 +80,12 @@ def mocap_processing(input_folder, output_folder):
         motion = h['motion']
         first_rot = h['first_rot']
         M1 = h['M1']
-
+        M1 = simulate_outlier_remove(M, M1)
         ####### Find the Rigid Transform ########
         windows_count = M.shape[0]
         offsets_input = torch.tensor(offsets, dtype=torch.float32).to(device)
         offsets_input = (offsets_input - train_offset_data[0]) / train_offset_data[1]
-        offset_latent = []
-        res_offset_list = []
+
         with torch.no_grad():
             offset_latent = static_encoder.encode(offsets_input)
             if(len(offset_latent.shape)==1):
@@ -92,7 +99,7 @@ def mocap_processing(input_folder, output_folder):
         offset_latent1 = torch.tensor(offset_latent, dtype=torch.float32).to(device)
         motion_input = torch.tensor(motion[:, :, :], dtype=torch.float32).to(device)
         motion_input = (motion_input - train_motion_data[0]) / train_motion_data[1]
-        motion_latent = []
+
         with torch.no_grad():
             motion_latent, _ = motion_encoder.forward(motion_input, res_offset_list)
         motion_latent = motion_latent.view(windows_count, -1)

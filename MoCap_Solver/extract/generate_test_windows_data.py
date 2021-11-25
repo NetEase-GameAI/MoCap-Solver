@@ -69,13 +69,6 @@ def test_processing(input_folder, output_folder):
         RigidR = list()
         RigidT = list()
         t_pos_marker = np.load(os.path.join('models', 't_pos_marker.npy'))
-        M_0 = M[0, ref_idx, :]
-        totalR, totalT = get_transfer_matrix(M_0, t_pos_marker)
-        M[:, :, :] = ((totalR.dot(M.reshape(-1, 3).T) + totalT).T).reshape(-1, 56, 3)
-        J_t[:, :,  :] = ((totalR.dot(J_t.reshape(-1, 3).T) + totalT).T).reshape(-1, 24, 3)
-        for i in range(N):
-            for j in range(24):
-                J_R[i, j, :, :] = totalR.dot(J_R[i, j, :, :])
         for idx_select in range(1):
             for i in range(windows_count):
                 rot_error_list = []
@@ -127,10 +120,10 @@ def test_processing(input_folder, output_folder):
                      shape=h['shape'], Marker=Marker, J=J, mrk_config=mrk_config, motion=new_motion, first_rot=new_first_rot)
 
 def generate_test_windows_data():
-    test_input_folder = os.path.join('data', 'test_sample_data')
-    test_output_folder = os.path.join('data', 'testing_windows_data')
-    if not os.path.exists(test_input_folder):
-        os.mkdir(test_input_folder)
-    if not os.path.exists(test_output_folder):
-        os.mkdir(test_output_folder)
-    test_processing(test_input_folder, test_output_folder)
+    train_input_folder = os.path.join('data', 'test_sample_data')
+    train_output_folder = os.path.join('data', 'testing_windows_data')
+    if not os.path.exists(train_input_folder):
+        os.mkdir(train_input_folder)
+    if not os.path.exists(train_output_folder):
+        os.mkdir(train_output_folder)
+    test_processing(train_input_folder, train_output_folder)

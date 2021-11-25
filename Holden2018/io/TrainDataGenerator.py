@@ -30,9 +30,10 @@ class TrainGenerator(Sequence):
         self.f_col = 3
         self.f_ch = 2
         npzfiles = glob.glob(os.path.join('Holden2018', 'data', 'Training_dataset', '*.npz'))
+
         totalframe = 0
         for npzfile in tqdm(npzfiles):
-            h = np.load(npzfile)
+            h = np.load(npzfile, allow_pickle=True)
             M = h['M'][:]
             totalframe += M.shape[0]
         totalframe = totalframe
@@ -40,20 +41,24 @@ class TrainGenerator(Sequence):
         self.label_data_vec = np.zeros((totalframe, MARKERNUM, 3))
         self.train_data_jts = np.zeros((totalframe, JOINTNUM, 3, 4))
         self.train_data_weighed = np.zeros((totalframe,MARKERNUM,  3))
+        self.train_data_mrkconfig = np.zeros((totalframe,MARKERNUM, JOINTNUM, 3))
+
         currentframe = 0
         currentidx = 0
         for npzfile in tqdm(npzfiles):
-            h = np.load(npzfile)
+            h = np.load(npzfile,allow_pickle=True)
             M = h['M'][:]
             N = M.shape[0]
             J_all = h['J_all']
             M1 = h['M1']
             weighted_mrk_config = h['weighted_mrk_config']
+            mrk_config = h['mrk_config']
             self.train_data_vec[currentframe:(currentframe + N), :,:, 0] = M1
             self.train_data_vec[currentframe:(currentframe + N), :, :, 1] = weighted_mrk_config
             self.label_data_vec[currentframe:(currentframe + N)] = M
             self.train_data_jts[currentframe:(currentframe + N)] = J_all
             self.train_data_weighed[currentframe:(currentframe + N)] = weighted_mrk_config
+            self.train_data_mrkconfig[currentframe:(currentframe + N)] = mrk_config
             currentidx += 1
             currentframe += N
 
@@ -66,7 +71,6 @@ class TrainGenerator(Sequence):
             np.save(os.path.join('models', 'train_data_marker_config_holden.npy'), np.array([self.weighted_marker_config_mean, self.weighted_marker_config_sigma]))
             self.train_label_mean = self.get_batch_mu(self.label_data_vec)
             self.train_label_sigma = self.get_batch_sigma(self.label_data_vec)
-
             np.save(os.path.join('models', 'train_data_marker_holden.npy'), np.array([self.train_label_mean, self.train_label_sigma]))
             self.train_joint_mean = self.get_batch_mu(self.train_data_jts)
             self.train_joint_sigma = self.get_batch_sigma(self.train_data_jts)
@@ -87,12 +91,19 @@ class TrainGenerator(Sequence):
     def __len__(self):
         return self.data_num
 
+
     def get_all_vectors(self):
         x_vec = self.train_data_vec
         y_vec0 = self.train_data_jts[:]
-        x_vec[:, :, :, 0] = (x_vec[:, :, :, 0] - self.train_label_mean) / self.train_label_sigma
-        x_vec[:, :, :,  1] = (x_vec[:, :, :,  1] - self.weighted_marker_config_mean) / self.weighted_marker_config_sigma
-        return x_vec, y_vec0
+        y_vec1 = self.train_data_jts[:]
+        y_vec2 = self.label_data_vec[:] #self.train_data_jts[:]  #y_vec2:clean marker pos
+        y_vec3 = self.train_data_mrkconfig[:]                    #y_vec3:mrkconfig
+        x_vec[:, :,:, 0] = (x_vec[:, :, :,0] - self.train_label_mean) / self.train_label_sigma
+        x_vec[:, :, :, 1] = (x_vec[:, :, :, 1] - self.weighted_marker_config_mean) / self.weighted_marker_config_sigma
+
+        ##x_vec input:noise marker + mean mrk config (N,56,3,2), yvec0 & y_vec1:noise marker (N,56,3) y_vec2:clean marker （N,56,3） y_vec3:mrkconfig （N,56,24,3）
+        return x_vec, y_vec0, y_vec1, y_vec2, y_vec3
+
 
     def __getitem__(self, idx):
 
@@ -153,8 +164,9 @@ class ValGenerator(Sequence):
         self.f_col = 3
         self.f_ch = 2
         npzfiles = glob.glob(os.path.join('Holden2018', 'data', 'Testing_dataset', '*.npz'))
+        #npzfiles = npzfiles[:]
         totalframe = 0
-        for npzfile in tqdm(npzfiles):
+        for npzfile in tqdm(npzfiles[:]):
             h = np.load(npzfile)
             M = h['M'][:]
             totalframe += M.shape[0]
@@ -163,22 +175,25 @@ class ValGenerator(Sequence):
         self.label_data_vec = np.zeros((totalframe, MARKERNUM, 3))
         self.train_data_jts = np.zeros((totalframe, JOINTNUM, 3, 4))
         self.train_data_weighed = np.zeros((totalframe,MARKERNUM,  3))
+        self.train_data_mrkconfig = np.zeros((totalframe,MARKERNUM, JOINTNUM, 3))
         # self.statistic_data_weighed = np.zeros((len(npzfiles), MARKER_NUM, JOINT_NUM, 3))
         # self.train_data_bone_length = np.zeros((totalframe, WINDOW_SIZE, len(prevlist)))
         currentframe = 0
         currentidx = 0
-        for npzfile in tqdm(npzfiles):
-            h = np.load(npzfile)
+        for npzfile in tqdm(npzfiles[:]):
+            h = np.load(npzfile, allow_pickle=True)
             M = h['M'][:]
             N = M.shape[0]
             J_all = h['J_all']
             M1 = h['M1']
             weighted_mrk_config = h['weighted_mrk_config']
+            mrk_config = h['mrk_config']
             self.train_data_vec[currentframe:(currentframe + N), :, :, 0] = M1
             self.train_data_vec[currentframe:(currentframe + N), :, :, 1] = weighted_mrk_config
             self.label_data_vec[currentframe:(currentframe + N)] = M
             self.train_data_jts[currentframe:(currentframe + N)] = J_all
             self.train_data_weighed[currentframe:(currentframe + N)] = weighted_mrk_config
+            self.train_data_mrkconfig[currentframe:(currentframe + N)] = mrk_config
             currentidx += 1
             currentframe += N
 
@@ -205,7 +220,12 @@ class ValGenerator(Sequence):
     def get_all_vectors(self):
         x_vec = self.train_data_vec
         y_vec0 = self.train_data_jts[:]
+        y_vec1 = self.train_data_jts[:]
+        y_vec2 = self.label_data_vec[:] #self.train_data_jts[:]  #y_vec2:clean marker pos
+        y_vec3 = self.train_data_mrkconfig[:]                    #y_vec3:mrkconfig
         x_vec[:, :,:, 0] = (x_vec[:, :, :,0] - self.train_label_mean) / self.train_label_sigma
         x_vec[:, :, :, 1] = (x_vec[:, :, :, 1] - self.weighted_marker_config_mean) / self.weighted_marker_config_sigma
-        return x_vec, y_vec0
+
+        ##x_vec input:noise marker + mean mrk config (N,56,3,2), yvec0 & y_vec1:noise marker (N,56,3) y_vec2:clean marker （N,56,3） y_vec3:mrkconfig （N,56,24,3）
+        return x_vec, y_vec0, y_vec1, y_vec2, y_vec3
 

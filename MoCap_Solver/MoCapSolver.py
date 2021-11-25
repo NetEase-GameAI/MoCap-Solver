@@ -11,7 +11,7 @@ class MoCapSolver():
         ############# Extract the data for training Marker Configuration Encoder ###################
         from MoCap_Solver.extract.generate_mc_dataset import generate_mc_dataset
         generate_mc_dataset()
-        ############# Convert the mocap data into temporal window data #############################
+        # ############# Convert the mocap data into temporal window data #############################
         from MoCap_Solver.extract.generate_train_windows_data import generate_train_windows_data
         from MoCap_Solver.extract.generate_test_windows_data import generate_test_windows_data
         generate_train_windows_data()
@@ -64,6 +64,6 @@ class MoCapSolver():
 
     def evaluate_solver(self):
         ###################### Evaluate MoCap-Solver ################################################
-        from MoCap_Solver.evaluate.evaluate_mocap_solver import evaluate_mocap_solver
-        evaluate_mocap_solver()
+        from MoCap_Solver.evaluate.evaluate_sequence import evaluate_sequence
+        evaluate_sequence()
         return

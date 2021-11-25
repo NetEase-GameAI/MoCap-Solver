@@ -34,18 +34,12 @@ class TrainData(Dataset):
         self.mrk_num = MARKERNUM
         self.f_col = 3
         self.f_ch = 1
-        npzs = glob.glob(os.path.join('MoCap_Solver','data', 'Training_dataset', 'mocap_dataset', '*.npz'))
-        train_list = [npz for npz in npzs[:]]
-        train_list = np.array(train_list)
         self.npzfiles = train_list[:]
         totalframe = 0
-        for npzfile in self.npzfiles:
-            filename = os.path.basename(npzfile).split('.')[0]
-            if os.path.exists(os.path.join('MoCap_Solver','data', 'Training_dataset', 'mocap_dataset', filename + '.npz')):
-                npzfile = os.path.join('MoCap_Solver', 'data', 'Training_dataset', 'mocap_dataset', filename + '.npz')
-                h = np.load(npzfile)
-                M = h['M']
-                totalframe += M.shape[0]
+        for npzfile in tqdm(self.npzfiles):
+            h = np.load(npzfile)
+            M = h['M']
+            totalframe += M.shape[0]
         self.totalframe = totalframe
         self.raw_markers = np.zeros((totalframe, FRAMENUM, MARKERNUM, 3))
         self.clean_markers = np.zeros((totalframe, FRAMENUM, MARKERNUM, 3))
@@ -62,35 +56,32 @@ class TrainData(Dataset):
         currentidx = 0
         for npzfile in tqdm(self.npzfiles):
             filename = os.path.basename(npzfile).split('.')[0]
-            if os.path.exists(os.path.join('MoCap_Solver', 'data', 'Training_dataset', 'mocap_dataset', filename + '.npz')):
-                h = np.load(os.path.join('MoCap_Solver', 'data', 'Training_dataset', 'mocap_dataset', filename + '.npz'))
-                M1 = h['M1']
-                # h = np.load(npzfile)
-                M = h['M']
-                # M1 = h['M1']
-                offsets = h['offsets']
-                mrk_config = h['mrk_config']
-                mc_latent_code = h['mc_latent_code']
-                motion_latent = h['motion_latent']
-                motion = h['motion']
-                N = M.shape[0]
-                J_R = h['J_R']
-                J_t = h['J_t']
-                first_rot = h['first_rot']
-                offsets_latent = h['offsets_latent']
-                self.raw_markers[currentframe: (currentframe + N)] = M1
-                self.clean_markers[currentframe: (currentframe + N)] = M
-                self.skeleton_pos[currentframe: (currentframe + N)] = J_t
-                self.motion[currentframe: (currentframe + N)] = motion
-                self.offsets[currentframe: (currentframe + N)] = offsets
-                self.marker_config[currentframe: (currentframe + N)] = mrk_config
-                self.motion_latent[currentframe: (currentframe + N)] = motion_latent
-                self.offsets_latent[currentframe: (currentframe + N)] = offsets_latent
-                self.mc_latent_code[currentframe: (currentframe + N)] = mc_latent_code
-                self.first_rot[currentframe: (currentframe + N)] = first_rot
-                self.transform[currentframe: (currentframe + N)] = J_R
-                currentidx += 1
-                currentframe += N
+            h = np.load(npzfile)
+            M1 = h['M1']
+            M = h['M']
+            offsets = h['offsets']
+            mrk_config = h['mrk_config']
+            mc_latent_code = h['mc_latent_code']
+            motion_latent = h['motion_latent']
+            motion = h['motion']
+            N = M.shape[0]
+            J_R = h['J_R']
+            J_t = h['J_t']
+            first_rot = h['first_rot']
+            offsets_latent = h['offsets_latent']
+            self.raw_markers[currentframe: (currentframe + N)] = M1
+            self.clean_markers[currentframe: (currentframe + N)] = M
+            self.skeleton_pos[currentframe: (currentframe + N)] = J_t
+            self.motion[currentframe: (currentframe + N)] = motion
+            self.offsets[currentframe: (currentframe + N)] = offsets
+            self.marker_config[currentframe: (currentframe + N)] = mrk_config
+            self.motion_latent[currentframe: (currentframe + N)] = motion_latent
+            self.offsets_latent[currentframe: (currentframe + N)] = offsets_latent
+            self.mc_latent_code[currentframe: (currentframe + N)] = mc_latent_code
+            self.first_rot[currentframe: (currentframe + N)] = first_rot
+            self.transform[currentframe: (currentframe + N)] = J_R
+            currentidx += 1
+            currentframe += N
 
         # for i in tqdm(range(totalframe)):
         #     rot = get_RotationMatrix_fromQuaternion(self.first_rot[i])
@@ -214,10 +205,8 @@ class ValData(Dataset):
         currentframe = 0
         currentidx = 0
         for npzfile in tqdm(npzfiles):
-            filename = os.path.basename(npzfile).split('.')[0]
-            h1 = np.load(os.path.join('MoCap_Solver', 'data', 'Testing_dataset', 'mocap_dataset', filename + '.npz'))
-            h = np.load(npzfile)
-            M = h['M']
+            h1 = np.load(npzfile)
+            M = h1['M']
             M1 = h1['M1']
             offsets = h1['offsets']
             mrk_config = h1['mrk_config']

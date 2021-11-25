@@ -395,3 +395,9 @@ def rot_error(r_gt, r_est):
     r = np.clip(r, -1, 1)
     dis = abs(math.acos(r))
     return dis
+
+def simulate_outlier_remove(M, M1):
+    remove_threshold = 0.2
+    detM = np.sqrt( np.sum( np.square(M1-M), axis = -1) )
+    M1[detM > remove_threshold] = [0.0,0.0,0.0]
+    return M1

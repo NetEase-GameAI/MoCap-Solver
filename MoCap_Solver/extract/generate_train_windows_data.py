@@ -29,7 +29,7 @@ def train_processing(input_folder, output_folder):
     weights = np.load(os.path.join('models', 'weights.npy'))
     windows_size = FRAMENUM
     scale = 1
-    for npz_frame in tqdm(npz_frames[0:200]):
+    for npz_frame in tqdm(npz_frames[:]):
         file_name = os.path.basename(npz_frame).split('.')[0]
         npz_frame = os.path.join(input_folder, file_name + '.npz')
         h = np.load(npz_frame)

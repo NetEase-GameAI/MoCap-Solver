@@ -94,6 +94,12 @@ We can train and evaluate MoCap-Solver by running this script.
 python train_and_evaluate_MoCap_Solver.py
 ```
 
+You can also copy the files from models/pretrained/seedxxx to models and run evaluation script (need to modify the SEED parameter).
+
+```
+python evaluate_MoCap_Solver.py
+```
+
 ## 3.2 Train and evaluate [Holden 2018]
 
 We also provide our implement version of [Holden 2018], which is the baseline of mocap data solving. 
@@ -107,9 +113,9 @@ python train_and_evaluate_Holden2018.py
 
 ## 3.3 Pre-trained models
 
-We set the SEED number to 100, 200, 300, 400 respectively, and generated four different datasets. We trained MoCap-Solver and [Holden 2018] on these four datasets and evaluated the errors on the test dataset, the evaluation result is showed on the table.
+We set the SEED number to 100, 200, 300, 400 respectively, and generated four different datasets. We trained MoCap-Solver and [Holden 2018] on these four datasets and evaluated the errors on the test dataset, the evaluation result is showed on the table. 
 
-We gave the pretained corresponding MoCap-Encoders in "models". 
+The pretrained models can be downloaded from [Google Drive](https://drive.google.com/file/d/1eAch0P2o_YW8G2Cl5H1tWnMUMw5yboqG/view?usp=sharing).
 
 In our original implementation of MoCap-Solver and [Holden 2018] in our paper, markers and skeletons were normalized using the average bone length of the dataset. However, it is problematic when deploying this algorithm to the production environment, since the groundtruth skeletons of test data were actually unknown information. So in our released version, such normalization is removed and the evaluation error is slightly higher than our original implementation since the task has become more complex.
 

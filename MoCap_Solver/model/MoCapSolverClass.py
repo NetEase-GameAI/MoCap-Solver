@@ -463,9 +463,9 @@ class MoCapSolverModel(BaseModel):
 
     def verbose(self):
         res = {'Total_loss': self.rec_losses[0][0].item(),
-            'joint_position_error': self.rec_losses[0][1].item(),
-               'marker_pos_error_average_:': self.rec_losses[0][2].item(),
-               'skel_pos_error_average_:': self.rec_losses[0][3].item(),
+               'marker_pos_error_average_': self.rec_losses[0][1].item(),
+               'joint_angle_error:': self.rec_losses[0][2].item(),
+               'joint_position_error:': self.rec_losses[0][3].item(),
                }
         return res.items()
 
